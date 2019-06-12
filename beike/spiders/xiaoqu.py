@@ -38,10 +38,10 @@ class XiaoquSpider(scrapy.Spider):
                 header_type = lis[i].xpath("./a/text()").extract()[0].strip()
                 if header_type == "小区":
                     xiaoqu_url = lis[i].xpath("./a/@href").extract()[0]
-                    yield scrapy.Request(url=xiaoqu_url, callback=self.parse_list, meta={"type": "xiaoqu"})
+                    yield scrapy.Request(url=xiaoqu_url, callback=self.parse_list, meta={"type": "xiaoqu", "city": response.meta['city']})
                 elif header_type == "新房":
                     xinfang_url = lis[i].xpath("./a/@href").extract()[0]
-                    yield scrapy.Request(url=xinfang_url, callback=self.parse_list, meta={"type": "xinfang"})
+                    yield scrapy.Request(url=xinfang_url, callback=self.parse_list, meta={"type": "xinfang", "city": response.meta['city']})
                 else:
                     pass
             self.resolved += 1
@@ -60,12 +60,12 @@ class XiaoquSpider(scrapy.Spider):
         elif loupan:
             loupan_uri = loupan.xpath("./div[@class='fl']/ul/li")[1].xpath("./a/@href").extract()[0]
             loupan_url = response.urljoin(loupan_uri)
-            yield scrapy.Request(url=loupan_url, callback=self.parse_list, meta={"type": "loupan"})
+            yield scrapy.Request(url=loupan_url, callback=self.parse_district, meta={"type": "loupan", "city": response.meta['city']})
             self.resolved += 1
         else:
             self.extra.append(response)
 
-    def parse_list(self, response):
+    def parse_district(self, response):
         # print(self.resolved)
         # print(self.header_ex)
         # print(self.extra)
@@ -76,10 +76,38 @@ class XiaoquSpider(scrapy.Spider):
                 district_name = district.xpath("./text()")[0].extract().strip()
                 district_uri = district.xpath("./@href")[0].extract().strip()
                 district_url = response.urljoin(district_uri)
-                yield scrapy.Request(url=district_url, callback=self.parse_street, meta={"type": response.meta['type']})
+                yield scrapy.Request(url=district_url, callback=self.parse_street, meta={"type": response.meta['type'], "city": response.meta['city'], "district": district_name})
+        else:
+            pass
 
     def parse_street(self, response):
         search_type = response.meta['type']
         if search_type == "xiaoqu":
-            streets = response.xpath("//div[@data-role='ershoufang']/div")
-            print(streets)
+            streets_div = response.xpath("//div[@data-role='ershoufang']/div")
+            if len(streets_div) != 2:
+                # print(response)
+                yield scrapy.Request(url=response.url, callback=self.parse_list, meta={"type": response.meta['type'], "city": response.meta['city'], "district": response.meta['district']})
+            # else:
+            #     for street in streets_div[1].xpath("./a"):
+            #         street_name = street.xpath("./text()").extract()[0].strip()
+            #         street_uri = street.xpath("./@href").extract()[0].strip()
+            #         street_url = response.urljoin(street_uri)
+            #         yield scrapy.Request(url=street_url, callback=self.parse_list)
+        else:
+            pass
+
+    def parse_list(self, response):
+        housing_list = response.xpath("//div[@data-component='list']/ul/li")
+        print(response)
+        print(response.url)
+        print(response._url)
+        print(response._get_url())
+        print(response.request)
+        print(housing_list)
+        # print(len(housing_list))
+        # print(response.meta)
+        # if response.meta['flag'] == "1":
+        #     print("street")
+        # else:
+        #     print("no street")
+
