@@ -64,9 +64,9 @@ ROBOTSTXT_OBEY = False
 
 # Configure item pipelines
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    'beike.pipelines.BeikePipeline': 300,
-#}
+ITEM_PIPELINES = {
+   'beike.pipelines.BeikePipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -88,3 +88,22 @@ ROBOTSTXT_OBEY = False
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
+LOG_FILE = "/tmp/beike.log"
+LOG_ENABLED = True
+LOG_STDOUT = True
+
+
+# MONGO_HOST = "10.1.4.62"
+MONGO_HOST = "127.0.0.1"
+MONGO_PORT = 27017
+MONGO_DB = "xiaoqucaiji"
+
+
+# REDIS_HOST = "10.1.4.62"
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = 6379
+REDIS_DB = 0
+# REDIS_PASS = "jiaqiubo"
+REDIS_PASS = None
