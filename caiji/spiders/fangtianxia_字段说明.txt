@@ -1,0 +1,28 @@
+province 省份
+city 城市
+district 区县
+street 街道
+housing_id
+housing_url 链接地址
+housing_name 名称
+housing_address 地址
+housing_price 价格
+building_type 建筑类型
+property_fee 物业费用
+property_company 物业公司
+property_type 物业类型
+developer 开发商
+building_total 楼栋总数
+house_total 规划户数
+greening_rate 绿化率
+right_years 产权年限
+area 占地面积
+capacity_rate 容积率
+water_supply 供水方式
+power_supply 供电方式
+parking_ratio 车位配比
+heating_mode 供暖方式
+parking_place 车位
+business_circle 商圈
+housing_detail_url 详情链接
+flag

@@ -1,0 +1,41 @@
+<div class="list-right" style="height:32px;">
+                                                                                   暂无
+
+                    <li>
+                       <div class="list-left">建筑类别：</div>
+                       <div class="list-right"><span class="bulid-type">                                                                                                                                板塔结合
+                                                                 高层                                                                                                                    </span></div>
+                    </li>
+                    <li>
+                       <div class="list-left">装修状况：</div>
+                       <div class="list-right">
+                                                                                                                        毛坯
+                                                                                                                                                                        </div>
+                    </li>
+                    <li>
+                       <div class="list-left">产权年限：</div>
+                                           <div class="list-right">
+                                                <div class="clearfix cqnx_512">
+
+                                                                <p style="width: 130px;float: left;">70</p>
+
+                                                </div>
+                                           </div>
+
+                    </li>
+
+                    <li>
+                       <div class="list-left">环线位置：</div>
+                       <div class="list-right">                                 暂无资料
+                                                </div>
+                    </li>
+                    <li class="list-text">
+                       <div class="list-left">开<i style="margin-right: 6px;"></i>发<i style="margin-right: 6px;"></i> 商：</div>
+                       <div class="list-right-text"><a href="//yuhuan.newhouse.fang.com/company/2045218010_20150525141730.htm" target="_blank">台州迦富置业有限公司</a></div>
+                    </li>
+                    <li class="list-text">
+                       <div class="list-left">楼盘地址：</div>
+                       <div class="list-right-text">湖滨路与文房路交叉口</div>
+                    </li>
+
+            </div>
