@@ -2,13 +2,39 @@
 import scrapy
 import re
 import json
+import redis
+import pymongo
 from caiji.items import CaijiItem
+from scrapy.conf import settings
 
 
 class A58tongchengSpider(scrapy.Spider):
-    name = '58tongcheng'
+    name = 'tongcheng58'
     allowed_domains = ['58.com']
     start_urls = ['https://www.58.com/changecity.html']
+
+    def __init__(self):
+        super().__init__()
+        redis_host = settings['REDIS_HOST']
+        redis_port = settings['REDIS_PORT']
+        redis_db = settings['REDIS_DB']
+        redis_password = settings['REDIS_PASS']
+        self.redis = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = cls(*args, **kwargs)
+        spider._set_crawler(crawler)
+        redis_host = spider.settings['REDIS_HOST']
+        redis_port = spider.settings['REDIS_PORT']
+        redis_db = spider.settings['REDIS_DB']
+        redis_password = spider.settings['REDIS_PASS']
+        mongo_host = spider.settings['MONGO_HOST']
+        mongo_port = spider.settings['MONGO_PORT']
+        mongo_db = spider.settings['MONGO_DB']
+        spider.redis = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+        spider.db = pymongo.MongoClient(host=mongo_host, port=mongo_port)[mongo_db]
+        return spider
 
     def parse(self, response):
         res = response.text
@@ -59,7 +85,8 @@ class A58tongchengSpider(scrapy.Spider):
         if xiaoqu_list:
             for xiaoqu in xiaoqu_list:
                 housing_url = xiaoqu.xpath("./@href").extract_first()
-                yield scrapy.Request(url=housing_url, callback=self.parse_detail, meta={'province': province, 'city': city, 'district': district, 'street': street})
+                if not self.redis.sismember(A58tongchengSpider.name, housing_url):
+                    yield scrapy.Request(url=housing_url, callback=self.parse_detail, meta={'province': province, 'city': city, 'district': district, 'street': street})
         else:
             # 返回列表为空
             pass
@@ -72,3 +99,70 @@ class A58tongchengSpider(scrapy.Spider):
         housing_url = response.url
         items = CaijiItem()
         housing_name = response.xpath("//div[@class='title-bar']/span[@class='title']/text()").extract_first()
+        housing_price_raw = response.xpath("//div[@class='price-container']")
+        if housing_price_raw:
+            price = housing_price_raw[0].xpath("./span[@class='price']/text()").extract_first()
+            unit = housing_price_raw[0].xpath("./span[@class='unit']/text()").extract_first()
+            housing_price = price + " " + unit
+        else:
+            housing_price = ""
+        info_tb = response.xpath("//table[@class='info-tb']/tr")
+        data_dict = {}
+        for data in info_tb:
+            td_block = data.xpath("./td")
+            if len(td_block) == 2:
+                key = td_block[0].xpath("./text()").extract_first()
+                value = td_block[1].xpath("./@title").extract_first()
+                if key not in data_dict:
+                    data_dict[key] = value
+            if len(td_block) == 4:
+                key1 = td_block[0].xpath("./text()").extract_first()
+                value1 = td_block[1].xpath("./@title").extract_first()
+                if key1 not in data_dict:
+                    data_dict[key1] = value1
+                key2 = td_block[2].xpath("./text()").extract_first()
+                value2 = td_block[3].xpath("./@title").extract_first()
+                if key2 not in data_dict:
+                    data_dict[key2] = value2
+        for label in data_dict:
+            if label == "商圈区域":
+                items['business_circle'] = data_dict[label]
+            if label == "详细地址":
+                items['housing_address'] = data_dict[label]
+            if label == "建筑类别":
+                items['building_type'] = data_dict[label]
+            if label == "总住户数":
+                items['house_total'] = data_dict[label]
+            if label == "产权类别":
+                items['property_type'] = data_dict[label]
+            if label == "物业费用":
+                items['property_fee'] = data_dict[label]
+            if label == "产权年限":
+                items['right_years'] = data_dict[label]
+            if label == "容积率":
+                items['capacity_rate'] = data_dict[label]
+            if label == "建筑年代":
+                items['built_year'] = data_dict[label]
+            if label == "绿化率":
+                items['greening_rate'] = data_dict[label]
+            if label == "占地面积":
+                items['area'] = data_dict[label]
+            if label == "建筑面积":
+                items['building_area'] = data_dict[label]
+            if label == "停车位":
+                items['parking_place'] = data_dict[label]
+            if label == "物业公司":
+                items['property_company'] = data_dict[label]
+            if label == "开发商":
+                items['developer'] = data_dict[label]
+        items['province'] = province
+        items['city'] = city
+        items['district'] = district
+        items['street'] = street
+        items['housing_url'] = housing_url
+        items['housing_name'] = housing_name
+        items['housing_price'] = housing_price
+        yield items
+
+
+

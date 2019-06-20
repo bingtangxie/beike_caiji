@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import scrapy
+import redis
+import pymongo
+from scrapy.conf import settings
 from caiji.items import CaijiItem
 
 
@@ -7,6 +10,29 @@ class AnjukeSpider(scrapy.Spider):
     name = 'anjuke'
     allowed_domains = ['anjuke.com']
     start_urls = ['https://www.anjuke.com/sy-city.html']
+
+    def __init__(self):
+        super().__init__()
+        redis_host = settings['REDIS_HOST']
+        redis_port = settings['REDIS_PORT']
+        redis_db = settings['REDIS_DB']
+        redis_password = settings['REDIS_PASS']
+        self.redis = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+
+    @classmethod
+    def from_crawler(cls, crawler, *args, **kwargs):
+        spider = cls(*args, **kwargs)
+        spider._set_crawler(crawler)
+        redis_host = spider.settings['REDIS_HOST']
+        redis_port = spider.settings['REDIS_PORT']
+        redis_db = spider.settings['REDIS_DB']
+        redis_password = spider.settings['REDIS_PASS']
+        mongo_host = spider.settings['MONGO_HOST']
+        mongo_port = spider.settings['MONGO_PORT']
+        mongo_db = spider.settings['MONGO_DB']
+        spider.redis = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+        spider.db = pymongo.MongoClient(host=mongo_host, port=mongo_port)[mongo_db]
+        return spider
 
     def parse(self, response):
         content = response.xpath('//div[@class="letter_city"]/ul/li')
@@ -69,9 +95,10 @@ class AnjukeSpider(scrapy.Spider):
             buildings = response.xpath("//div[@class='infos']")
             for building in buildings:
                 detail_url = building.xpath("./a[@class='lp-name']/@href").extract_first()
-                yield scrapy.Request(url=detail_url, callback=self.parse_detail,
-                                     meta={'city': city, 'district': district, 'street': street,
-                                           'housing_url': detail_url, 'search_type': search_type})
+                if not self.redis.sismember(AnjukeSpider.name, detail_url):
+                    yield scrapy.Request(url=detail_url, callback=self.parse_detail,
+                                         meta={'city': city, 'district': district, 'street': street,
+                                               'housing_url': detail_url, 'search_type': search_type})
                 pagination = response.xpath("//div[@class='pagination']")
                 next_page = pagination.xpath("./a[@class='next-page next-link']")
                 if next_page:
@@ -167,4 +194,4 @@ class AnjukeSpider(scrapy.Spider):
             items['housing_price'] = housing_price
             items['housing_url'] = housing_url
             items['housing_detail_url'] = housing_detail_url
-            print(items)
+            yield items

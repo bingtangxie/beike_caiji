@@ -3,6 +3,7 @@ import scrapy
 from caiji.items import CaijiItem
 import redis
 import pymongo
+import re
 from scrapy.conf import settings
 
 
@@ -18,6 +19,7 @@ class FangtianxiaSpider(scrapy.Spider):
         redis_db = settings['REDIS_DB']
         redis_password = settings['REDIS_PASS']
         self.redis = redis.StrictRedis(host=redis_host, port=redis_port, db=redis_db, password=redis_password)
+        self.sum = 0
 
     @classmethod
     def from_crawler(cls, crawler, *args, **kwargs):
@@ -64,7 +66,7 @@ class FangtianxiaSpider(scrapy.Spider):
         if xinfang:
             link_url = xinfang.xpath('./@href').extract()[0]
             search_type = 'xinfang'
-            yield scrapy.Request(url=link_url, callback=self.parse_district, meta={'province': province, 'city': city, 'search_type': search_type})
+            # yield scrapy.Request(url=link_url, callback=self.parse_district, meta={'province': province, 'city': city, 'search_type': search_type})
         if ershoufang:
             link_url = ershoufang.xpath('./@href').extract()[0]
             search_type = 'ershoufang'
@@ -77,6 +79,10 @@ class FangtianxiaSpider(scrapy.Spider):
         city = response.meta['city']
         if search_type == 'xinfang':
             districts = response.xpath("//dd[@id='sjina_D03_05']/ul/li[@id='quyu_name']/a")
+            house_total = response.xpath("//li[@id='sjina_C01_30']/a/span/text()").extract_first()
+            city_house_total = re.search("\((\d+)\)", house_total).group(1)
+            # self.sum = self.sum + int(city_house_total)
+            # print(province, city, city_house_total, self.sum)
             if districts:
                 for district in districts:
                     if district.xpath("./@style").extract():
@@ -87,7 +93,6 @@ class FangtianxiaSpider(scrapy.Spider):
                         link_uri = district.xpath("./@href").extract()[0]
                         district_name = district.xpath("./text()").extract()[0]
                         link_url = response.urljoin(link_uri)
-                        # print(link_url, base_info, response.url)
                         yield scrapy.Request(url=link_url, callback=self.parse_street,
                                              meta={'province': province, 'city': city, 'district': district_name,
                                                    'search_type': search_type})

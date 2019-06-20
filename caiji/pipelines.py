@@ -11,16 +11,16 @@ from datetime import datetime
 
 
 class CaijiPipeline(object):
-    def __init__(self):
-        host = settings['MONGO_HOST']
-        port = settings["MONGO_PORT"]
-        dbname = settings["MONGO_DB"]
-        client = pymongo.MongoClient(host=host, port=port)
-        mydb = client[dbname]
-        self.db = mydb
-
-        self.redis = redis.StrictRedis(host=settings['REDIS_HOST'], port=settings['REDIS_PORT'],
-                                       db=settings['REDIS_DB'], password=settings['REDIS_PASS'])
+    # def __init__(self):
+    #     host = settings['MONGO_HOST']
+    #     port = settings["MONGO_PORT"]
+    #     dbname = settings["MONGO_DB"]
+    #     client = pymongo.MongoClient(host=host, port=port)
+    #     mydb = client[dbname]
+    #     self.db = mydb
+    #
+    #     self.redis = redis.StrictRedis(host=settings['REDIS_HOST'], port=settings['REDIS_PORT'],
+    #                                    db=settings['REDIS_DB'], password=settings['REDIS_PASS'])
 
     def process_item(self, item, spider):
         if spider.name == "beike":
@@ -110,6 +110,82 @@ class CaijiPipeline(object):
                 'commnity_entrance',
                 'education_facility'
                 ]
+            for i in range(len(fields)):
+                if fields[i] not in data:
+                    data[fields[i]] = ""
+            spider.db[spider.name].insert(data)
+            spider.redis.sadd(spider.name, data['housing_url'])
+        if spider.name == "tongcheng58":
+            data = dict(item)
+            data['created'] = datetime.now()
+            fields = [
+                'province',
+                'city',
+                'district',
+                'street',
+                'housing_id',
+                'housing_url',
+                'housing_name',
+                'housing_alias',
+                'housing_address',
+                'housing_price',
+                'building_type',
+                'property_fee',
+                'property_company',
+                'property_type',
+                'developer',
+                'building_total',
+                'house_total',
+                'greening_rate',
+                'right_years',
+                'area',
+                'capacity_rate',
+                'water_supply',
+                'power_supply',
+                'parking_ratio',
+                'heating_mode',
+                'parking_place',
+                'business_circle',
+                'built_year'
+            ]
+            for i in range(len(fields)):
+                if fields[i] not in data:
+                    data[fields[i]] = ""
+            spider.db[spider.name].insert(data)
+            spider.redis.sadd(spider.name, data['housing_url'])
+        if spider.name == "anjuke":
+            data = dict(item)
+            data['created'] = datetime.now()
+            fields = [
+                'province',
+                'city',
+                'district',
+                'street',
+                'housing_id',
+                'housing_url',
+                'housing_name',
+                'housing_alias',
+                'housing_address',
+                'housing_price',
+                'building_type',
+                'property_fee',
+                'property_company',
+                'property_type',
+                'developer',
+                'building_total',
+                'house_total',
+                'greening_rate',
+                'right_years',
+                'area',
+                'capacity_rate',
+                'water_supply',
+                'power_supply',
+                'parking_ratio',
+                'heating_mode',
+                'parking_place',
+                'business_circle',
+                'housing_detail_url'
+            ]
             for i in range(len(fields)):
                 if fields[i] not in data:
                     data[fields[i]] = ""

@@ -55,3 +55,5 @@ class CaijiItem(scrapy.Item):
     health_service = scrapy.Field()
     commnity_entrance = scrapy.Field()
     education_facility = scrapy.Field()
+
+    built_year = scrapy.Field()
